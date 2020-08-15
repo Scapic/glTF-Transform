@@ -14,6 +14,7 @@
     "watch:docs": "watch-exec -c \"yarn docs\" -w \"packages\" -w \"docs\" -e \"docs/dist\"",
     "clean": "rm -rf packages/*/dist/**",
     "test": "tape packages/*/test/{*/,}*.test.js | tap-spec",
+    "test:ts": "ts-node node_modules/tape/bin/tape packages/*/test/{*/,}*.test.ts | tap-spec",
     "test:browser": "browserify packages/core/test/{*/,}*.test.js | tape-run | tap-spec",
     "coverage": "nyc --reporter=text tape packages/*/test/{*/,}*.test.js",
     "coverage:report": "nyc report --reporter=text-lcov | coveralls",
@@ -42,6 +43,7 @@
     "tap-spec": "^5.0.0",
     "tape": "^4.9.1",
     "tape-run": "^7.0.0",
+    "ts-node": "^8.10.2",
     "tslib": "^1.11.1",
     "typescript": "^3.8.3"
   }

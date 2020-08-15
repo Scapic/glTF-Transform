@@ -1,7 +1,7 @@
 require('source-map-support').install();
 
-const test = require('tape');
-const { Document } = require('../');
+import * as test from 'tape';
+import { Document } from '../';
 
 test('@gltf-transform/core::document | transform', t => {
 	const doc = new Document();

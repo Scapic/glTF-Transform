@@ -1,47 +1,49 @@
 require('source-map-support').install();
 
-const fs = require('fs');
-const path = require('path');
-const test = require('tape');
-const { Document, Extension, ExtensionProperty, NodeIO, PropertyType } = require('../');
+import * as fs from 'fs';
+import * as path from 'path';
+import * as test from 'tape';
+import { Document, Extension, ExtensionProperty, NodeIO, PropertyType, ReaderContext, WriterContext } from '../';
 
 const EXTENSION_NAME = 'TEST_node_gizmo';
 
 class GizmoExtension extends Extension {
+	extensionName = EXTENSION_NAME;
 	constructor(doc) {
 		super(doc);
-		this.extensionName = EXTENSION_NAME;
 	}
 
 	createGizmo() {
 		return new Gizmo(this.doc.getGraph(), this);
 	}
 
-	write(context) {
+	write(context: WriterContext): this {
 		for (const node of this.doc.getRoot().listNodes()) {
 			if (node.getExtension(Gizmo)) {
 				const nodeDef = context.nativeDocument.json.nodes[context.nodeIndexMap.get(node)];
-				nodeDef.extensions = {TEST_node_gizmo: {isGizmo: true}};
+				nodeDef.extensions = {'TEST_node_gizmo': {isGizmo: true}};
 			}
 		}
+		return this;
 	}
 
-	read(context) {
+	read(context: ReaderContext): this {
 		context.nativeDocument.json.nodes.forEach((nodeDef, index) => {
 			const extensionDef = nodeDef.extensions && nodeDef.extensions.TEST_node_gizmo;
 			if (!extensionDef || !extensionDef.isGizmo) return;
-			const extension = this.doc.createExtension(GizmoExtension);
+			const extension = this.doc.createExtension(GizmoExtension) as GizmoExtension;
 			context.nodes[index].setExtension(Gizmo, extension.createGizmo());
 		});
+		return this;
 	}
 }
 
 class Gizmo extends ExtensionProperty {
+	extensionName = EXTENSION_NAME;
+	propertyType = 'Gizmo';
+	parentTypes = [PropertyType.NODE];
 	constructor(graph, extension) {
 		super(graph, extension);
-		this.extensionName = EXTENSION_NAME;
-		this.propertyType = 'Gizmo';
-		this.parentTypes = [PropertyType.NODE];
 	}
 }
 
@@ -67,9 +69,9 @@ test('@gltf-transform/core::extension | list', t => {
 
 test('@gltf-transform/core::extension | property', t => {
 	const doc = new Document();
-	const extension = doc.createExtension(GizmoExtension);
+	const extension = doc.createExtension(GizmoExtension) as GizmoExtension;
 	const gizmo = extension.createGizmo();
-	const node = doc.createNode();
+	const node = doc.createNode('MyNode');
 
 	t.equal(node.getExtension(Gizmo), null, 'getExtension() → null (1)');
 
@@ -103,10 +105,10 @@ test('@gltf-transform/core::extension | property', t => {
 test('@gltf-transform/core::extension | i/o', t => {
 	const io = new NodeIO(fs, path).registerExtensions([GizmoExtension]);
 	const doc = new Document();
-	const extension = doc.createExtension(GizmoExtension);
+	const extension = doc.createExtension(GizmoExtension) as GizmoExtension;
 	doc.createNode().setExtension(Gizmo, extension.createGizmo());
 
-	const options = {basename: 'extensionTest'};
+	const options = {basename: 'extensionTest', isGLB: false};
 
 	let nativeDoc;
 	let resultDoc;
